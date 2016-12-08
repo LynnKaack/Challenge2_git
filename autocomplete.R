@@ -4,16 +4,16 @@ library(testthat)
 # Beginning with the read function
 
 input.file <- "baby-names.txt"
+
 read.terms <- function(input.file){
-  word.data <- read.table(input.file, sep = "", header = TRUE, row.names = NULL)
+  word.data <- read.table(input.file, sep = "\t", header = TRUE, row.names = NULL)
   names(word.data) <- c("weight", "term")
-  
-  
   return(word.data)
 }
 
 
 words <- read.terms("baby-names.txt")
+words <- read.terms("pokemon.txt")
 
 head(words$weight)
 
@@ -35,8 +35,9 @@ sort_byTerm <- function(input.words, input.r){
   #nextElem(i1)
   
   # Include levels
-  number.strings <- unique(sorted.words$words)
-  sorted.words$stringID <- as.numeric(factor(substr(sorted.words$term, 1, input.r)))
+  #number.strings <- unique(sorted.words$words)
+  #sorted.words$stringID <- as.numeric(factor(substr(sorted.words$term, 1, input.r)))
+  sorted.words$fragment <- substr(sorted.words$term, 1, input.r)
   
   return(sorted.words)
 }
@@ -182,7 +183,7 @@ test_that("lower and upper bound frame only equal entries", {
 })
 
 
-input.query <- "Marc"
+input.query <- "Mar"
 input.words <- words
 k <- 3
   
@@ -196,9 +197,11 @@ autocomplete <- function(input.query, input.words, k){
   lex.word <- sort_byTerm(input.words, r)
   query.code <- head(lex.word[substring(lex.word$term, 1, r)== input.query, 3], 
                      n=1)
+  low <- binary_lower_bound(input.query, lex.word$fragment, 1, nrow(lex.word)+1)
+  high <- binary_upper_bound(input.query, lex.word$fragment, 1, nrow(lex.word)+1)
   
-  low <- binary_lower_bound(query.code, lex.word$stringID, 1, nrow(lex.word)+1)
-  high <- binary_upper_bound(query.code, lex.word$stringID, 1, nrow(lex.word)+1)
+  #low <- binary_lower_bound(query.code, lex.word$fragment, 1, nrow(lex.word)+1)
+  #high <- binary_upper_bound(query.code, lex.word$fragment, 1, nrow(lex.word)+1)
   
   relevant.word <- lex.word[(low[1]+1):(high[1]-1),]
   
@@ -207,9 +210,11 @@ autocomplete <- function(input.query, input.words, k){
 
 
 
-autocomplete("Lynn", words, 5)
+autocomplete("Lynn", words, 10)
 autocomplete("Michelle", words, 3)
-autocomplete("Marc", words, 3)
+autocomplete("Mich", words, 3)
 
-autocomplete("Pedro", words, 3)
+autocomplete("Pedr", words, 3)
 autocomplete("Erin", words, 5)
+
+# It only works for queries of length 4 or 3
